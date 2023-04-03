@@ -404,3 +404,6 @@ build/
 
 ### Python ###
 /Django/crud_project/venv/
+/Django/crud_project/api/__pycache__/
+/Django/crud_project/crud_project/__pycache__/
+/Django/crud_project/dao/__pycache__/
