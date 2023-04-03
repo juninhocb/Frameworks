@@ -1,6 +1,5 @@
 from django.views.decorators.http import require_http_methods
 from django.views.decorators.csrf import csrf_exempt
-from django.shortcuts import get_object_or_404
 from django.http import JsonResponse
 from .forms import *
 from .services import *
@@ -62,46 +61,64 @@ def read_a_person(request, person_id):
 
 @csrf_exempt
 @require_http_methods(['PUT'])
-def update_an_office(request, office_id):
-    dataFromClient = json.loads(request.body)
+def update_an_office(request, office_id):  
     service = OfficeService()
-    return JsonResponse(service.update(office_id, dataFromClient), safe=False)
+    dataFromClient = json.loads(request.body)
+    responseFromReadingData = service.read(office_id) 
+    oldObject = OfficeSerializerToJson(responseFromReadingData['obj']).data
+    if (oldObject == None):
+        return JsonResponse(responseFromReadingData, safe= False, status=404)
+    oldObject['name'] = dataFromClient.get('name')   
+    response = service.update(oldObject)
+
+
+    return JsonResponse(response, safe=False, status=response['code'])
 
     
 
 @csrf_exempt
 @require_http_methods(['PUT'])
 def update_a_person(request, person_id):
-
-    old_person = get_object_or_404(Person, id=person_id)
-
+    servicePerson = PersonService()
+    serviceOffice = OfficeService()
     dataFromClient = json.loads(request.body)
+    responseFromReadingDataPerson = servicePerson.read(person_id) 
+    responseFromReadingDataOffice = serviceOffice.read(dataFromClient.get('office_id'))
+    oldPerson = PersonSerializerToJson(responseFromReadingDataPerson['obj']).data
+    oldOffice = OfficeSerializerToJson(responseFromReadingDataOffice['obj']).data
 
-    nameFromRequest = dataFromClient.get('name')
-    ageFromRequest = dataFromClient.get('age')
-    is_retiredFromRequest = dataFromClient.get('is_retired')
-    office_idFromRequest = dataFromClient.get('office_id')
-    office = get_object_or_404(Office, id=office_idFromRequest)
+    if (oldPerson == None):
+        return JsonResponse(responseFromReadingDataPerson, safe= False, status=404)
+    if (oldOffice == None):
+        return JsonResponse(responseFromReadingDataOffice, safe= False, status=404)
+    
+    oldPerson['name'] = dataFromClient.get('name')
+    oldPerson['age'] = dataFromClient.get('age')
+    oldPerson['isRetired'] = dataFromClient.get('is_retired')
+    oldPerson['idOffice'] = dataFromClient.get('office_id')
 
-    old_person.name = nameFromRequest
-    old_person.age = ageFromRequest
-    old_person.isRetired = is_retiredFromRequest
-    old_person.idOffice = office
+    response = servicePerson.update(oldPerson)
 
-    old_person.save()
-
-    return JsonResponse({'status': 'success', 'message': 'Person updated successfully'})
+    return JsonResponse({'status': 'success', 'message': 'Person updated successfully'}, status=response['code'])
 
 @csrf_exempt
 @require_http_methods(['DELETE'])
 def delete_an_office(request, office_id):
-    office = get_object_or_404(Office, id=office_id)
-    office.delete()
+    service = OfficeService()
+    officeResponse = service.read(office_id)
+    office = officeResponse['obj']
+    if (office == None):
+        return JsonResponse(officeResponse, safe= False, status=404)
+    service.delete(office)
     return JsonResponse({'status': 'success', 'message': 'Office deleted successfully'})
 
 @csrf_exempt
 @require_http_methods(['DELETE'])
 def delete_a_person(request, person_id):
-    person = get_object_or_404(Person, id=person_id)
-    person.delete()
+    service = PersonService()
+    personResponse = service.read(person_id)
+    person = personResponse['obj']
+    if (person == None):
+        return JsonResponse(personResponse, safe= False, status=404)
+    service.delete(person)
     return JsonResponse({'status': 'success', 'message': 'Person deleted successfully'})

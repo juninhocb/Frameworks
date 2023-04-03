@@ -37,23 +37,23 @@ class BaseService:
         else:
             return {'status': 'failed', 'message': 'Object was not found', 'code' : 404, 'obj': None}
 
-    def update(self, idFromPathVariable, newObject):
-        obj = self.read(idFromPathVariable)
-        if (obj['status'] == 'failed'):
-            return obj
-        
+    def update(self, oldObject):
         form_class = self.get_form_class()
-        form = form_class(newObject)
+        form = form_class(oldObject)
+        
         if form.is_valid():
-            form.save()
+            newObj = form.save(commit=False)
+            newObj.id = oldObject['id']; 
+            newObj.save()
             return {'status': 'success', 'message': 'Object was updated successfully', 'code' : 204} 
         else:
             errors = {}
             for field, messages in form.errors.items():
                 errors[field] = messages[0]
             return {'status': 'failed', 'message': f'Object was not updated. {errors}', 'code' : 400}
-
     
+    def delete(self, obj):
+        obj.delete()
 
 
 class PersonService(BaseService):
