@@ -12,6 +12,8 @@ def get_people():
 @api_person_bp.route('/read/<int:idParam>', methods=['GET'])
 def get_person(idParam):
     person = Person.query.filter(Person.id == idParam).first()
+    if (person == None):
+        return jsonify({'error': 'Person not found'}), 404
     return jsonify([person.to_json()])
 
 @api_person_bp.route('/create', methods=['POST'])
@@ -20,7 +22,6 @@ def create_person():
     person = Person(**data)
     db.session.add(person)
     db.session.commit()
-    print("testee ae")
     return jsonify(person.to_json())
 
 @api_person_bp.route('/update/<int:idParam>', methods=['PUT'])
