@@ -1,19 +1,11 @@
-from .database import db
-from .enums import Nationality
+from enum import Enum
+from app.dao.database import db
+from app.dao.models import BaseModel
 
-class BaseModel(db.Model):
-    __abstract__ = True
-    id = db.Column(db.Integer, primary_key=True)
-
-class Office(BaseModel):
-    __tablename__ = 'office'
-    name = db.Column(db.String(30), nullable=False, default="unknown", unique=True)
-
-    def to_json(self):
-        return {
-            'id': self.id,
-            'name': self.name
-        }
+class Nationality(Enum):
+    PORTUGUESE = 'br', "Brazilian"
+    ENGLISH = 'en', "American"
+    SPANISH = 'ar', "Argentinian"
 
 class Person(BaseModel):
     __tablename__ = 'person'
@@ -34,6 +26,3 @@ class Person(BaseModel):
             'id_office' : self.id_office, 
             'office' : self.office.to_json()
         }
-
-
-
