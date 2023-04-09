@@ -408,3 +408,4 @@ build/
 /Django/crud_project/crud_project/__pycache__/
 /Django/crud_project/dao/__pycache__/
 /Flask/venv/
+/Fast_Api/venv/
